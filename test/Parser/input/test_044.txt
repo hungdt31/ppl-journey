@@ -1,0 +1,10 @@
+
+                                    func Add() {
+                                        if (x.foo().b[2]) 
+                                        {
+                                            if (1){} else {}
+
+                                        } else if(2)
+                                        {
+                                        }
+                                    }

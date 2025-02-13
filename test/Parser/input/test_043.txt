@@ -1,7 +1,6 @@
 
                                     func Add() {
-                                        if (x.foo().b[2]) 
-                                        {
-                                            if (){}
-                                        } 
-                                    }
+                                        for var i [2] int = 0; foo().a.b(); i[3] := 1 {
+                                            return; 
+                                        }
+                                    };

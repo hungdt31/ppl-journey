@@ -189,7 +189,7 @@ class ParserSuite(unittest.TestCase):
                                         for var i [2]int = 0; foo().a.b(); i[3] := 1 {
                                             return; 
                                         }
-                                    };""","successful", inspect.stack()[0].function))
+                                    };""","Error on line 3 col 76: [", inspect.stack()[0].function))
     def test_025(self):
         self.assertTrue(TestParser.test("""
             func (p Person) Greet() string {
@@ -324,4 +324,21 @@ class ParserSuite(unittest.TestCase):
                                     func Add() {
                                         (1+2).foo(2 + 3, a {a:2})
                                     };""","Error on line 3 col 40: (", inspect.stack()[0].function))
+
+    def test_042(self):
+        """Statement"""
+        self.assertTrue(TestParser.test("""
+                                    for i := 0; i < 10; i += 1 {
+                                        // loop body
+                                        return;
+                                    };""","successful", inspect.stack()[0].function))
+    
+    def test_043(self):
+        """Statement"""
+        self.assertTrue(TestParser.test("""
+                                    func Add() {
+                                        for var i [2] int = 0; foo().a.b(); i[3] := 1 {
+                                            return; 
+                                        }
+                                    };""","Error on line 3 col 77: [", inspect.stack()[0].function))
        

@@ -62,24 +62,19 @@ class LexerSuite(unittest.TestCase):
 
     def test_012(self):
         """UNCLOSE_STRING"""
-        self.assertTrue(TestLexer.test(""" "VOTIEN\n" ""","Unclosed string: VOTIEN", inspect.stack()[0].function))
+        self.assertTrue(TestLexer.test(""" "VOTIEN\n" ""","Unclosed string: \"VOTIEN", inspect.stack()[0].function))
     
     def test_013(self):
         """ILLEGAL_ESCAPE"""
-        self.assertTrue(TestLexer.test(""" "VOTIEN\\f" ""","Illegal escape in string: VOTIEN\\f", inspect.stack()[0].function))
+        self.assertTrue(TestLexer.test(""" "VOTIEN\\f" ""","Illegal escape in string: \"VOTIEN\\f", inspect.stack()[0].function))
     
     def test_014(self):
-        """declared function"""
+        """FLOAT LITERAL"""
         self.assertTrue(TestLexer.test("""
-            func VoTien(x int, y int) int {return;}
-            func VoTien1() [2][3] ID {return;};        
-            func VoTien2() {return;}                                       
-        ""","successful", inspect.stack()[0].function))
+            1e+7
+""", "1,e,+,7,;,<EOF>", inspect.stack()[0].function))
     
     def test_015(self):
-        """declared method"""
         self.assertTrue(TestLexer.test("""
-            func (c Calculator) VoTien(x int) int {return;};  
-            func (c Calculator) VoTien() ID {return;}      
-            func (c Calculator) VoTien(x int, y [2]VoTien) {return;}                                                      
-        ""","successful", inspect.stack()[0].function))
+           "12""
+""", "12,Unclosed string: """, inspect.stack()[0].function))

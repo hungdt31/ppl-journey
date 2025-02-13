@@ -1,5 +1,5 @@
 grammar MiniGo;
-
+// MSSV 2211322 - Đoàn Trí Hùng
 @lexer::header {
 from lexererr import *
 }
@@ -33,7 +33,7 @@ options{
 	language = Python3;
 }
 
-// ! ---------------- LEXER DEADLINE PASS 13 TEST CASE 23:59 16/1 ----------------------- */
+// ! ---------------- LEXER ----------------------- */
 
 //TODO Keywords 3.3.2 pdf
 IF: 'if';
@@ -95,7 +95,6 @@ MOD_ASSIGN: '%=';
 ASSIGN: '=';
 DOT: '.';
 
-
 //TODO Separators 3.3.4 pdf
 OP: '('; // "open parenthesis"
 CP: ')'; // "close parenthesis"
@@ -106,13 +105,10 @@ CCB: '}'; // "close curly bracket"
 COMMA: ',';
 SEMICOLON: ';';
 
-
-
 //TODO Identifiers 3.3.1 pdf
 ID: [a-zA-Z_][a-zA-Z0-9_]*; // Ex: x, userName, _tempVar, count123
 
-//TODO Literals 3.3.5 pdf
-
+//TODO Literal 3.3.5 pdf
 // Integer Literals
 DECIMAL_LIT: ('0' | [1-9] [0-9]*);
 BINARY_LIT  : '0' [bB] BIN_DIGIT+;
@@ -126,7 +122,7 @@ fragment OCTAL_DIGIT: [0-7];
 fragment BIN_DIGIT: [01];
 
 // Floating-Point Literals
-FLOAT_LIT: DECIMALS '.' [0-9]* EXPONENT? | DECIMALS EXPONENT;
+FLOAT_LIT: DECIMALS '.' [0-9]* EXPONENT?;
 fragment DECIMALS: [0-9]+;
 fragment EXPONENT: [eE] [+\-]? [0-9]+;
 
@@ -147,6 +143,7 @@ fragment ESC_ILLEGAL: [\r] | '\\' ~[rnt'\\];
 
 //! ---------------- PARSER ----------------------- */
 program: list_statement EOF;
+semicolon_newline: SEMICOLON | NEWLINE;
 declared_statement: var_decl | const_decl | func_decl | struct_decl | interface_decl | method_decl;
 const_decl: CONST ID ASSIGN expression;
 var_decl: VAR ID param_type? (ASSIGN expression)?;
@@ -162,16 +159,16 @@ array_literal: array_bracket (ID | primitive_type) OCB array_lit_elements CCB;
 array_lit_elements: array_lit_element COMMA array_lit_element | array_lit_element;
 array_lit_element:  OCB array_lit_element CCB | array_lit_element COMMA primitive_literal | primitive_literal;
 
-
 struct_literal: ID OCB struct_element? CCB;
 struct_element: ID ':' expression COMMA struct_element | ID ':' expression;
 interface_decl: TYPE ID INTERFACE OCB method_interface_decl CCB;
-method_interface_decl: ID OP method_params? CP param_type? (SEMICOLON | NEWLINE) method_interface_decl | ID OP method_params? CP param_type? (SEMICOLON | NEWLINE);
+method_interface_decl: method_field semicolon_newline method_interface_decl | method_field semicolon_newline;
+method_field: ID OP method_params? CP param_type?;
 method_params: ID param_type? COMMA method_params | ID param_type;
 // 4.6 Struct type
 struct_decl: TYPE ID STRUCT OCB struct_decl_elements CCB;
 struct_decl_element: (ID type_return | method_decl);
-struct_decl_elements: struct_decl_element (SEMICOLON | NEWLINE) struct_decl_elements | struct_decl_element (SEMICOLON | NEWLINE);
+struct_decl_elements: struct_decl_element semicolon_newline struct_decl_elements | struct_decl_element semicolon_newline;
 
 // TODO 5.2 Expressions 6 pdf
 list_expression: expression COMMA list_expression | expression;
@@ -194,12 +191,11 @@ func_decl: FUNC ID OP method_params? CP type_return? OCB statements_in_block CCB
 method_decl: FUNC OP ID ID CP ID OP method_params? CP expression? (primitive_type | ID)? OCB statements_in_block CCB;
 
 //TODO Statement 5 and 4 pdf
-end_statement: SEMICOLON | NEWLINE;
-list_statement: statement end_statement list_statement | statement end_statement;
+list_statement: statement semicolon_newline list_statement | statement semicolon_newline;
 // TODO: 7 Statements
 statement: declared_statement | assign_statement | if_statement | for_statement | call_statement | return_statement;
 full_statement: statement | break_statement | continue_statement;
-statements_in_block: full_statement end_statement statements_in_block | full_statement end_statement;
+statements_in_block: full_statement semicolon_newline statements_in_block | full_statement semicolon_newline;
 
 // 7.2 Assignment Statement
 // The LHS can be a scalar variable, an array element access (e.g., arr[index]), or a struct field access (e.g., structName.fieldName).
@@ -212,13 +208,18 @@ assign_statement: lhs op_assign expression;
 // 7.3 If Statement - attention to NEWLINE
 else_if_el: ELSE IF OP expression CP OCB statements_in_block CCB;
 else_if_statement:  else_if_el | else_if_el else_if_statement;
-if_statement: IF OP expression CP OCB statements_in_block CCB else_if_statement? (ELSE OCB statements_in_block CCB)?;
+else_statement: ELSE OCB statements_in_block CCB;
+if_statement: IF OP expression CP OCB statements_in_block CCB else_if_statement? else_statement?;
 
 // 7.4 For Statement
 for_statement: basic_for_statement | init_for_statement | range_for_statement;
+
 basic_for_statement: FOR expression OCB statements_in_block CCB;
-update_part: ID array_bracket? (SHORT_DECL | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN) expression;
-init_for_statement: FOR ((ID SHORT_DECL expression) | var_decl) (NEWLINE | SEMICOLON) expression (NEWLINE | SEMICOLON) update_part OCB statements_in_block CCB;
+
+update_part: ID (SHORT_DECL | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN) expression;
+init_part: (ID SHORT_DECL expression) | (VAR ID param_type? ASSIGN expression);
+init_for_statement: FOR init_part semicolon_newline expression semicolon_newline update_part OCB statements_in_block CCB;
+
 range_for_statement: FOR ID COMMA ID SHORT_DECL RANGE (lhs | DECIMAL_LIT | struct_literal) OCB statements_in_block CCB;
 
 // 7.5 Break Statement
@@ -230,6 +231,7 @@ continue_statement: CONTINUE;
 // 7.7 Call Statement
 call_statement: call_statement DOT call_statement | call_statement OSB DECIMAL_LIT CSB | call_statement_1;
 call_statement_1: ID | func_call;
+
 // 7.8 Return statement
 // ignore_return: ~(INT | STRING | IF | ELSE | FOR | RETURN | FUNC | TYPE | STRUCT | INTERFACE | FLOAT | BOOLEAN | CONST | VAR | CONTINUE | BREAK | RANGE);
 return_statement: RETURN expression?;
@@ -240,13 +242,13 @@ ERROR_CHAR: . {raise ErrorToken(self.text)};
 
 UNCLOSE_STRING: '"' STR_CHAR* ('\r\n' | '\n' | EOF) {
     if(len(self.text) >= 2 and self.text[-1] == '\n' and self.text[-2] == '\r'):
-        raise UncloseString(self.text[1:-2])
+        raise UncloseString(self.text[:-2])
     elif (self.text[-1] == '\n'):
-        raise UncloseString(self.text[1:-1])
+        raise UncloseString(self.text[:-1])
     else:
-        raise UncloseString(self.text[1:])
+        raise UncloseString(self.text)
 };
 
 ILLEGAL_ESCAPE: '"' STR_CHAR* ESC_ILLEGAL {
-    raise IllegalEscape(self.text[1:])
+    raise IllegalEscape(self.text)
 };

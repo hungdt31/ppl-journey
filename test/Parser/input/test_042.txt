@@ -1,4 +1,5 @@
 
-                                    func Add() {
-                                        a[2].b := 2;       
-                                    }
+                                    for i := 0; i < 10; i += 1 {
+                                        // loop body
+                                        return;
+                                    };

@@ -1,6 +1,11 @@
 
-                                    func Add() {
-                                        for const i = 0; i < 10; i += 1 {
-                                            // loop body
-                                        }
-                                    }
+            func check(x int) {
+                if (x > 0) {
+                    return x
+                } else if (x < 0) {
+                    return -x
+                } else {
+                    return 0
+                }
+            }
+        

@@ -1,4 +1,3 @@
-
-                                    func Add() {
-                                        (1+2).foo(2 + 3, a {a:2})
-                                    };
+    
+            var z VOTIEN = a[2][3][a + 2];                         
+        

@@ -1,1 +1,3 @@
-const a = [1]int{{1, 0x1}, ID{}, {{ID{}}}}                    
+    
+            var z VOTIEN = [2]int{};                         
+        

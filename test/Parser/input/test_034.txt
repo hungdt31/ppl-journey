@@ -1,6 +1,3 @@
-
-            func (p Person) Greet() string {
-                for i < 10 {
-// loop body
-}
-            };  
+    
+            var z VOTIEN = ID + 3;                         
+        

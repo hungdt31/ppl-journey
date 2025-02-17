@@ -1,6 +1,3 @@
-
-        type Person struct {
-            func (p Person) Greet() string {
-                return "Hello, " + p.name
-            };                                                 
-        }      
+    
+            var z VOTIEN = a.a.a[2].foo();                         
+        

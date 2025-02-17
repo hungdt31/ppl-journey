@@ -1,2 +1,3 @@
-
-            func (c c) Add(x, c int) {return ;}
+    
+            const a = 1.;                         
+        

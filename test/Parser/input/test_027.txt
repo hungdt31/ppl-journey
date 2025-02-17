@@ -1,2 +1,3 @@
-
-        func Add(x, y int, b float) {return ;}
+    
+            var z VOTIEN = []int{1};                         
+        

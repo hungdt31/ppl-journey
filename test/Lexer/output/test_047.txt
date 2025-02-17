@@ -1,1 +1,1 @@
-Illegal escape in string: VOTIEN\f
+0X0cb,<EOF>

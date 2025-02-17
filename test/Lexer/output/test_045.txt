@@ -1,1 +1,1 @@
-ErrorToken ^
+0,Oo1,<EOF>

@@ -1,2 +1,1 @@
-
-,this is a,newline,Unclosed string: 
+1.,<EOF>

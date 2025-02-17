@@ -1,0 +1,5 @@
+
+                                    func Add() {
+                                        a[2][3].foo().foo();
+                                            return; 
+                                    };

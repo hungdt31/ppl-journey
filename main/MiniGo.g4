@@ -1,6 +1,8 @@
+// 2211322
 grammar MiniGo;
-// MSSV 2211322 - Đoàn Trí Hùng
+
 @lexer::header {
+# 2211322
 from lexererr import *
 }
 
@@ -57,7 +59,7 @@ NIL: 'nil';
 TRUE: 'true';
 FALSE: 'false';
 //, self.BINARY_LIT, self.OCT_LIT, self.HEXA_LIT, 
-NEWLINE: '\r'? '\n' {
+SEMICOLON: ';' | '\r'? '\n' {
     if self.preType in {
         self.CP, self.CCB, self.CSB, 
         self.INT_LIT, self.FLOAT_LIT, self.STRING_LIT, 
@@ -102,7 +104,6 @@ CSB: ']'; // "close square bracket"
 OCB: '{'; // "open curly bracket"
 CCB: '}'; // "close curly bracket"
 COMMA: ',';
-SEMICOLON: ';';
 
 //TODO Identifiers 3.3.1 pdf
 ID: [a-zA-Z_][a-zA-Z0-9_]*; // Ex: x, userName, _tempVar, count123
@@ -127,18 +128,18 @@ LINE_COMMENT: '//' ~[\r\n]* -> skip;
 
 //TODO ERROR pdf BTL1 + lexererr.py
 // { self.text = self.text[1:-1] }
-STRING_LIT: '"' STR_CHAR* '"';                              // Chuyển sang chế độ NLSEMI để xử lý dấu chấm phẩy tự động
-fragment ESCAPED_VALUE: '\\' [ntr"\\];                             // Các ký tự thoát hỗ trợ \n, \t, \r, \", \\
+STRING_LIT: '"' STR_CHAR* '"';                 
+fragment ESCAPED_VALUE: '\\' [ntr"\\];
 fragment STR_CHAR: ~[\r\n\\"] | ESC_SEQ;
-fragment ESC_SEQ: '\\' [rnt"\\]; // | '\\' '"';
+fragment ESC_SEQ: '\\' [rnt"\\];
 fragment ESC_ILLEGAL: [\r] | '\\' ~[rnt'\\];
 
 //! ---------------- END OF LEXER ----------------------- */
 
 //! ---------------- PARSER ----------------------- */
-program: list_statement EOF;
-semicolon_newline: SEMICOLON | NEWLINE;
-declared_statement: var_decl | const_decl | func_decl | struct_decl | interface_decl | method_decl;
+program: list_decl EOF;
+list_decl: decl SEMICOLON list_decl | decl SEMICOLON;
+decl: const_decl | var_decl | func_decl | struct_decl | interface_decl | method_decl;
 const_decl: CONST ID ASSIGN expression;
 var_decl: VAR ID (param_type | (ASSIGN expression) | (param_type ASSIGN expression));
 primitive_type: INT | FLOAT | STRING | BOOLEAN;
@@ -157,14 +158,16 @@ array_lit_element_1: primitive_literal | struct_literal | ID;
 
 struct_literal: ID OCB struct_element? CCB;
 struct_element: ID ':' expression COMMA struct_element | ID ':' expression;
+
+// 4.7 Interface type
 interface_decl: TYPE ID INTERFACE OCB method_interface_decl CCB;
-method_interface_decl: method_field semicolon_newline method_interface_decl | method_field semicolon_newline;
+method_interface_decl: method_field SEMICOLON method_interface_decl | method_field SEMICOLON;
 method_field: ID OP method_params? CP param_type?;
 method_params: ID param_type? COMMA method_params | ID param_type;
 // 4.6 Struct type
 struct_decl: TYPE ID STRUCT OCB struct_decl_elements CCB;
 struct_decl_element: ID type_return;
-struct_decl_elements: struct_decl_element semicolon_newline struct_decl_elements | struct_decl_element semicolon_newline;
+struct_decl_elements: struct_decl_element SEMICOLON struct_decl_elements | struct_decl_element SEMICOLON;
 
 // TODO 5.2 Expressions 6 pdf
 list_expression: expression COMMA list_expression | expression;
@@ -183,15 +186,22 @@ func_call: ID OP list_expression? CP;
 params: ID param_type COMMA params | ID param_type;
 param_type: param_type OSB INT_LIT CSB| OSB INT_LIT CSB param_type| param_type_1;
 param_type_1: primitive_type | ID;
-func_decl: FUNC ID OP method_params? CP type_return? OCB statements_in_block? CCB;
-method_decl: FUNC OP ID ID CP ID OP method_params? CP expression? (primitive_type | ID)? OCB statements_in_block? CCB;
+func_decl: FUNC ID OP method_params? CP type_return? OCB list_statement CCB;
+method_decl: FUNC OP ID ID CP ID OP method_params? CP expression? (primitive_type | ID)? OCB list_statement CCB;
 
 //TODO Statement 5 and 4 pdf
-list_statement: statement semicolon_newline list_statement | statement semicolon_newline;
+list_statement: statement SEMICOLON list_statement | statement SEMICOLON;
 // TODO: 7 Statements
-statement: declared_statement | assign_statement | if_statement | for_statement | call_statement | return_statement;
-full_statement: statement | break_statement | continue_statement;
-statements_in_block: full_statement semicolon_newline statements_in_block | full_statement semicolon_newline;
+declared_statement: var_decl | const_decl;
+statement: 
+    declared_statement
+    | assign_statement 
+    | if_statement 
+    | for_statement 
+    | call_statement 
+    | return_statement
+    | break_statement
+    | continue_statement;
 
 // 7.2 Assignment Statement
 // The LHS can be a scalar variable, an array element access (e.g., arr[index]), or a struct field access (e.g., structName.fieldName).
@@ -202,22 +212,22 @@ op_assign: SHORT_DECL | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN | MOD_
 assign_statement: lhs op_assign expression;
 
 // 7.3 If Statement - attention to NEWLINE
-else_if_el: ELSE IF OP expression CP OCB statements_in_block? CCB;
+else_if_el: ELSE IF OP expression CP OCB list_statement CCB;
 else_if_statement:  else_if_el | else_if_el else_if_statement;
-else_statement: ELSE OCB statements_in_block? CCB;
-if_statement: IF OP expression CP OCB statements_in_block? CCB else_if_statement? else_statement?;
+else_statement: ELSE OCB list_statement CCB;
+if_statement: IF OP expression CP OCB list_statement CCB else_if_statement? else_statement?;
 
 // 7.4 For Statement
 for_statement: basic_for_statement | init_for_statement | range_for_statement;
 
-basic_for_statement: FOR expression OCB statements_in_block? CCB;
+basic_for_statement: FOR expression OCB list_statement CCB;
 
 update_part: ID (SHORT_DECL | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN) expression;
 init_part: (ID SHORT_DECL expression) | (VAR ID param_type? ASSIGN expression);
-init_for_statement: FOR init_part semicolon_newline expression semicolon_newline update_part OCB statements_in_block? CCB;
+init_for_statement: FOR init_part SEMICOLON expression SEMICOLON update_part OCB list_statement CCB;
 
-range_for_statement: FOR ID COMMA ID SHORT_DECL RANGE expression OCB statements_in_block? CCB;
-// (lhs | INT_LIT | struct_literal)
+range_for_statement: FOR ID COMMA ID SHORT_DECL RANGE expression OCB list_statement CCB;
+
 // 7.5 Break Statement
 break_statement: BREAK;
 
@@ -225,11 +235,11 @@ break_statement: BREAK;
 continue_statement: CONTINUE;
 
 // 7.7 Call Statement
-call_statement: call_statement DOT call_statement | call_statement OSB INT_LIT CSB | call_statement_1;
-call_statement_1: ID | func_call;
+call_statement: func_call | method_call;
+method_call: method_alias DOT func_call; 
+method_alias: ID | method_alias DOT ID | method_alias OSB expression CSB | method_alias DOT func_call;
 
 // 7.8 Return statement
-// ignore_return: ~(INT | STRING | IF | ELSE | FOR | RETURN | FUNC | TYPE | STRUCT | INTERFACE | FLOAT | BOOLEAN | CONST | VAR | CONTINUE | BREAK | RANGE);
 return_statement: RETURN expression?;
 
 //! ---------------- END OF PARSER ----------------------- */
